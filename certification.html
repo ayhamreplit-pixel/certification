@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certification</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;700&family=Almarai:wght@400;700;800&family=Tajawal:wght@400;700;900&family=Lateef:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --gold:#C9A227;
+    --gold-soft:#E4CE86;
+    --paper:#FBF7EE;
+    --line:#DCD2B8;
+    --radius:14px;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  body{
+    font-family:'Cairo', Tahoma, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #22335c 0%, transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, #2c1f1f 0%, transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    min-height:100vh;
+    padding:32px 20px 60px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .brand{ text-align:center; margin-bottom:28px; }
+  .brand .eyebrow{
+    font-size:13px; letter-spacing:.15em; color:var(--gold-soft);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .brand h1{ font-family:'Amiri', serif; font-size:38px; font-weight:700; }
+  .brand p{ margin-top:8px; color:#B9C2D9; font-size:15px; }
+
+  .layout{
+    width:100%; max-width:1220px;
+    display:grid;
+    grid-template-columns:360px 1fr;
+    gap:24px; align-items:start;
+  }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(228,206,134,.18);
+    border-radius:var(--radius);
+    padding:22px;
+    backdrop-filter:blur(6px);
+  }
+  .panel + .panel{ margin-top:18px; }
+
+  .panel h2{
+    font-size:15px; color:var(--gold-soft);
+    margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .panel h2::before{
+    content:""; width:6px; height:6px; background:var(--gold);
+    border-radius:50%; display:inline-block;
+  }
+
+  label{ display:block; font-size:13px; color:#C9D0E3; margin-bottom:6px; }
+
+  input[type="text"], textarea{
+    width:100%; padding:11px 12px; font-size:15px; font-family:inherit;
+    border-radius:8px; border:1px solid rgba(228,206,134,.25);
+    background:rgba(255,255,255,.06); color:var(--paper); margin-bottom:16px;
+    resize:vertical;
+  }
+  textarea{ min-height:110px; line-height:1.7; }
+  input[type="text"]::placeholder, textarea::placeholder{ color:#7D89A8; }
+  input[type="text"]:focus, textarea:focus{ outline:none; border-color:var(--gold); }
+
+  .row{ display:flex; gap:12px; }
+  .row > div{ flex:1; }
+
+  input[type="range"]{ width:100%; accent-color:var(--gold); margin-bottom:2px; }
+  .range-val{ font-size:12px; color:#9FA9C4; margin-bottom:14px; display:block; }
+
+  select, input[type="color"]{
+    width:100%; padding:8px; border-radius:8px;
+    border:1px solid rgba(228,206,134,.25);
+    background:rgba(255,255,255,.06); color:var(--paper);
+    font-family:inherit; margin-bottom:14px;
+  }
+  select option{ color:#111; }
+
+  .swatches{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .swatch{
+    width:28px; height:28px; border-radius:50%; cursor:pointer;
+    border:2px solid rgba(255,255,255,.35); transition:.12s;
+  }
+  .swatch:hover{ transform:scale(1.12); }
+  .swatch.active{ border-color:var(--gold-soft); box-shadow:0 0 0 2px rgba(201,162,39,.4); }
+
+  .file-btn{
+    display:block; width:100%; padding:12px; text-align:center;
+    border:1.5px dashed rgba(228,206,134,.4); border-radius:8px;
+    color:var(--gold-soft); font-size:14px; cursor:pointer; margin-bottom:8px;
+    transition:.15s;
+  }
+  .file-btn:hover{ border-color:var(--gold); background:rgba(201,162,39,.08); }
+  .file-name{ font-size:12px; color:#8B96B5; margin-bottom:16px; }
+
+  button.primary{
+    width:100%; padding:14px; font-size:16px; font-weight:600; font-family:inherit;
+    cursor:pointer; border:none; border-radius:9px;
+    background:linear-gradient(135deg, var(--gold), #A9811C);
+    color:#231A05; margin-bottom:10px; transition:transform .12s, box-shadow .12s;
+  }
+  button.primary:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(201,162,39,.35); }
+  button.primary:disabled{ opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  button.secondary{
+    width:100%; padding:12px; font-size:14px; font-family:inherit; cursor:pointer;
+    border:1px solid rgba(228,206,134,.3); border-radius:9px;
+    background:transparent; color:var(--paper); margin-bottom:8px;
+  }
+  button.secondary:hover{ background:rgba(255,255,255,.06); }
+
+  .hint{ font-size:12px; color:#8B96B5; line-height:1.7; margin-top:4px; }
+
+  .preview-wrap{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(228,206,134,.18);
+    border-radius:var(--radius); padding:20px;
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+
+  .canvas-stage{
+    position:relative;
+    width:100%;
+    max-width:900px;
+    line-height:0;
+  }
+
+  canvas{
+    width:100%; height:auto; border-radius:6px;
+    box-shadow:0 20px 45px rgba(0,0,0,.4);
+    background:var(--paper);
+    display:block;
+  }
+
+  .drag-handle{
+    position:absolute;
+    width:36px; height:36px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    border:2px solid var(--gold);
+    background:rgba(201,162,39,.22);
+    cursor:grab;
+    touch-action:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .drag-handle:active{ cursor:grabbing; background:rgba(201,162,39,.4); }
+  .drag-handle::before, .drag-handle::after{
+    content:""; position:absolute; background:var(--gold);
+  }
+  .drag-handle::before{ width:16px; height:2px; }
+  .drag-handle::after{ width:2px; height:16px; }
+
+  .drag-tip{
+    position:absolute; top:-30px; left:50%; transform:translateX(-50%);
+    font-size:11px; background:rgba(27,42,74,.9); color:var(--gold-soft);
+    padding:3px 9px; border-radius:6px; white-space:nowrap; pointer-events:none;
+    opacity:0; transition:opacity .15s;
+  }
+  .drag-handle:hover .drag-tip, .drag-handle.dragging .drag-tip{ opacity:1; }
+
+  .status{ font-size:13px; color:var(--gold-soft); min-height:18px; text-align:center; }
+
+  .progress{
+    width:100%; max-width:900px; height:6px;
+    background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; display:none;
+  }
+  .progress.active{ display:block; }
+  .progress-bar{ height:100%; width:0%; background:var(--gold); transition:width .2s; }
+</style>
+</head>
+
+<body>
+
+<div class="brand">
+  <div class="eyebrow">أداة المعلّم</div>
+  <h1>شهادات دكتور فاروق</h1>
+  <p>ارفع تصميم الشهادة، اسحب الاسم إلى موضعه المناسب، ثم أنشئ شهادة واحدة أو دفعة كاملة للصف</p>
+</div>
+
+<div class="layout">
+
+  <!-- ===== CONTROLS ===== -->
+  <div class="controls-col">
+
+    <div class="panel">
+      <h2>تصميم الشهادة</h2>
+      <label class="file-btn" for="templateInput">📄 اختر صورة الشهادة (JPG / PNG)</label>
+      <input type="file" id="templateInput" accept="image/*" style="display:none">
+      <div class="file-name" id="templateFileName">لم يتم اختيار صورة — سيتم استخدام تصميم افتراضي</div>
+    </div>
+
+    <div class="panel">
+      <h2>الأسماء</h2>
+      <label for="studentName">شهادة فردية</label>
+      <input type="text" id="studentName" placeholder="اكتب اسم الطالب هنا">
+
+      <label for="batchNames">دفعة أسماء (اسم في كل سطر)</label>
+      <textarea id="batchNames" placeholder="فاروق الحق&#10;اسم اسم اسم&#10;فاروق الحق"></textarea>
+
+      <label class="file-btn" for="txtInput">📃 أو ارفع ملف أسماء txt.</label>
+      <input type="file" id="txtInput" accept=".txt,text/plain" style="display:none">
+      <div class="file-name" id="txtFileName">كل اسم في سطر مستقل داخل الملف</div>
+      <div class="hint">اترك حقل الدفعة فارغًا إن أردت إنشاء شهادة واحدة فقط من الحقل أعلاه.</div>
+    </div>
+
+    <div class="panel">
+      <h2>موضع الاسم</h2>
+      <div class="hint" style="margin-bottom:12px;">اسحب النقطة الذهبية على الشهادة مباشرة لتحديد مكان الاسم، أو استخدم الأشرطة للدقة.</div>
+
+      <label>الموضع الأفقي (X)</label>
+      <input type="range" id="posX" min="0" max="100" value="51">
+      <span class="range-val" id="posXVal">51%</span>
+
+      <label>الموضع الرأسي (Y)</label>
+      <input type="range" id="posY" min="0" max="100" value="48">
+      <span class="range-val" id="posYVal">48%</span>
+
+      <label>أقصى عرض للنص</label>
+      <input type="range" id="maxWidth" min="20" max="90" value="55">
+      <span class="range-val" id="maxWidthVal">55%</span>
+    </div>
+
+    <div class="panel">
+      <h2>مظهر الاسم</h2>
+
+      <label for="fontFamily">نوع الخط</label>
+      <select id="fontFamily">
+        <option value="'Aref Ruqaa', serif">Aref Ruqaa — رقعة فخمة</option>
+        <option value="'Amiri', serif" selected>Amiri — نسخ كلاسيكي</option>
+        <option value="'Reem Kufi', sans-serif">Reem Kufi — كوفي بارز</option>
+        <option value="'Lateef', serif">Lateef — نسخ تقليدي</option>
+        <option value="'Almarai', sans-serif">Almarai — عصري نظيف</option>
+        <option value="'Cairo', sans-serif">Cairo — عصري</option>
+        <option value="'Tajawal', sans-serif">Tajawal — بسيط أنيق</option>
+      </select>
+
+      <label>حجم الخط</label>
+      <input type="range" id="fontSize" min="24" max="130" value="72">
+      <span class="range-val" id="fontSizeVal">72px</span>
+
+      <label>لون الاسم</label>
+      <div class="swatches" id="swatches">
+        <div class="swatch active" style="background:#C9A227" data-color="#C9A227" title="ذهبي"></div>
+        <div class="swatch" style="background:#1B2A4A" data-color="#1B2A4A" title="كحلي"></div>
+        <div class="swatch" style="background:#8E2F2F" data-color="#8E2F2F" title="عنابي"></div>
+        <div class="swatch" style="background:#1F6F50" data-color="#1F6F50" title="زمردي"></div>
+        <div class="swatch" style="background:#1E4FBF" data-color="#1E4FBF" title="أزرق ملكي"></div>
+        <div class="swatch" style="background:#9C6B30" data-color="#9C6B30" title="برونزي"></div>
+        <div class="swatch" style="background:#101010" data-color="#101010" title="أسود"></div>
+        <div class="swatch" style="background:#FFFFFF" data-color="#FFFFFF" title="أبيض"></div>
+      </div>
+      <input type="color" id="fontColor" value="#C9A227">
+    </div>
+
+    <div class="panel">
+      <button class="primary" id="downloadOneBtn">⬇ تنزيل شهادة واحدة</button>
+      <button class="secondary" id="downloadZipBtn">📦 إنشاء الدفعة وتنزيلها (ZIP)</button>
+      <div class="hint" id="zipHint">سيُنشئ ملفًا مضغوطًا يحتوي على شهادة لكل اسم في قائمة الدفعة، بنفس الموضع والخط واللون المحدد أعلاه.</div>
+    </div>
+
+  </div>
+
+  <!-- ===== PREVIEW ===== -->
+  <div class="preview-wrap">
+    <div class="canvas-stage" id="stage">
+      <canvas id="canvas" width="1600" height="1131"></canvas>
+      <div class="drag-handle" id="dragHandle">
+        <span class="drag-tip">اسحبني</span>
+      </div>
+    </div>
+    <div class="progress" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const stage = document.getElementById("stage");
+  const handle = document.getElementById("dragHandle");
+  const statusEl = document.getElementById("status");
+
+  const els = {
+    studentName: document.getElementById("studentName"),
+    batchNames: document.getElementById("batchNames"),
+    posX: document.getElementById("posX"),
+    posY: document.getElementById("posY"),
+    maxWidth: document.getElementById("maxWidth"),
+    fontSize: document.getElementById("fontSize"),
+    fontColor: document.getElementById("fontColor"),
+    fontFamily: document.getElementById("fontFamily"),
+    templateInput: document.getElementById("templateInput"),
+    templateFileName: document.getElementById("templateFileName"),
+    txtInput: document.getElementById("txtInput"),
+    txtFileName: document.getElementById("txtFileName"),
+    downloadOneBtn: document.getElementById("downloadOneBtn"),
+    downloadZipBtn: document.getElementById("downloadZipBtn"),
+    progressWrap: document.getElementById("progressWrap"),
+    progressBar: document.getElementById("progressBar"),
+    swatches: document.getElementById("swatches"),
+  };
+
+  let templateImg = null;
+  let templateReady = false;
+
+  // ---------- default placeholder background ----------
+  function drawDefaultTemplate(){
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = "#FBF7EE";
+    ctx.fillRect(0,0,w,h);
+
+    ctx.strokeStyle = "#C9A227";
+    ctx.lineWidth = 10;
+    ctx.strokeRect(30,30,w-60,h-60);
+
+    ctx.strokeStyle = "#1B2A4A";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(52,52,w-104,h-104);
+
+    ctx.fillStyle = "#1B2A4A";
+    ctx.textAlign = "center";
+    ctx.direction = "rtl";
+    ctx.font = "700 54px 'Amiri', serif";
+    ctx.fillText("شهادة تقدير", w/2, 220);
+
+    ctx.font = "400 26px 'Cairo', sans-serif";
+    ctx.fillStyle = "#5A6484";
+    ctx.fillText("تُمنح هذه الشهادة إلى", w/2, 300);
+
+    ctx.beginPath();
+    ctx.arc(w-220, h-190, 70, 0, Math.PI*2);
+    ctx.fillStyle = "#8E2F2F";
+    ctx.fill();
+    ctx.font = "700 20px 'Cairo', sans-serif";
+    ctx.fillStyle = "#F1EADA";
+    ctx.fillText("ختم", w-220, h-183);
+
+    ctx.font = "400 22px 'Cairo', sans-serif";
+    ctx.fillStyle = "#5A6484";
+    ctx.fillText("تقديرًا لجهوده وتميّزه", w/2, h-160);
+  }
+
+  // ---------- fit text to a max width by shrinking font size ----------
+  function fitFontSize(text, family, startSize, maxWidthPx){
+    let size = startSize;
+    const minSize = 20;
+    while (size > minSize){
+      ctx.font = `700 ${size}px ${family}`;
+      if (ctx.measureText(text).width <= maxWidthPx) break;
+      size -= 2;
+    }
+    return size;
+  }
+
+  // ---------- core render ----------
+  function renderName(name){
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    if (templateImg && templateReady){
+      ctx.drawImage(templateImg, 0, 0, w, h);
+    } else {
+      drawDefaultTemplate();
+    }
+
+    const cleanName = (name || "").trim() || "اسم الطالب";
+    const family = els.fontFamily.value;
+    const baseSize = parseInt(els.fontSize.value, 10);
+    const maxWidthPx = w * (parseInt(els.maxWidth.value,10) / 100);
+
+    const size = fitFontSize(cleanName, family, baseSize, maxWidthPx);
+
+    const x = w * (parseInt(els.posX.value,10) / 100);
+    const y = h * (parseInt(els.posY.value,10) / 100);
+
+    ctx.direction = "rtl";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `700 ${size}px ${family}`;
+    ctx.fillStyle = els.fontColor.value;
+
+    ctx.shadowColor = "rgba(0,0,0,.20)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+
+    ctx.fillText(cleanName, x, y);
+
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
+
+  function renderPreview(){
+    renderName(els.studentName.value);
+  }
+
+  // ---------- sync handle position with sliders ----------
+  function updateHandlePosition(){
+    handle.style.left = els.posX.value + "%";
+    handle.style.top = els.posY.value + "%";
+  }
+
+  function updateReadouts(){
+    document.getElementById("posXVal").textContent = els.posX.value + "%";
+    document.getElementById("posYVal").textContent = els.posY.value + "%";
+    document.getElementById("maxWidthVal").textContent = els.maxWidth.value + "%";
+    document.getElementById("fontSizeVal").textContent = els.fontSize.value + "px";
+  }
+
+  function refreshAll(){
+    updateReadouts();
+    updateHandlePosition();
+    renderPreview();
+  }
+
+  // ---------- drag-to-position the name directly on the certificate ----------
+  let dragging = false;
+
+  function setPositionFromClientCoords(clientX, clientY){
+    const rect = stage.getBoundingClientRect();
+    let px = ((clientX - rect.left) / rect.width) * 100;
+    let py = ((clientY - rect.top) / rect.height) * 100;
+    px = Math.max(0, Math.min(100, px));
+    py = Math.max(0, Math.min(100, py));
+    els.posX.value = px.toFixed(1);
+    els.posY.value = py.toFixed(1);
+    refreshAll();
+  }
+
+  handle.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    handle.classList.add("dragging");
+    handle.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  handle.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    setPositionFromClientCoords(e.clientX, e.clientY);
+  });
+
+  handle.addEventListener("pointerup", (e) => {
+    dragging = false;
+    handle.classList.remove("dragging");
+    handle.releasePointerCapture(e.pointerId);
+  });
+
+  // allow clicking anywhere on the certificate to jump the name there
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.target === handle) return;
+    setPositionFromClientCoords(e.clientX, e.clientY);
+  });
+
+  // ---------- template upload ----------
+  els.templateInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    templateReady = false;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        templateImg = img;
+        templateReady = true;
+        els.templateFileName.textContent = "✓ " + file.name;
+        renderPreview();
+      };
+      img.onerror = () => { statusEl.textContent = "تعذّر تحميل هذه الصورة، جرّب صورة أخرى."; };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---------- txt names upload ----------
+  els.txtInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const raw = ev.target.result;
+      const names = raw
+        .split(/\r\n|\r|\n/)
+        .map(n => n.trim())
+        .filter(n => n.length > 0);
+
+      els.batchNames.value = names.join("\n");
+      els.txtFileName.textContent = `✓ ${file.name} — تم استيراد ${names.length} اسمًا`;
+    };
+    reader.onerror = () => { els.txtFileName.textContent = "تعذّر قراءة الملف، تأكد أنه ملف نصي txt."; };
+    reader.readAsText(file, "UTF-8");
+  });
+
+  // ---------- color swatches ----------
+  els.swatches.addEventListener("click", (e) => {
+    const sw = e.target.closest(".swatch");
+    if (!sw) return;
+    const color = sw.dataset.color;
+    els.fontColor.value = color;
+    [...els.swatches.children].forEach(c => c.classList.remove("active"));
+    sw.classList.add("active");
+    renderPreview();
+  });
+
+  els.fontColor.addEventListener("input", () => {
+    [...els.swatches.children].forEach(c => c.classList.remove("active"));
+    renderPreview();
+  });
+
+  // ---------- live controls ----------
+  [els.studentName, els.maxWidth, els.fontSize, els.fontFamily]
+    .forEach(el => el.addEventListener("input", refreshAll));
+
+  [els.posX, els.posY].forEach(el => el.addEventListener("input", refreshAll));
+
+  // ---------- single download ----------
+  function downloadCanvasAsPng(filename){
+    const link = document.createElement("a");
+    link.download = filename;
+    link.href = canvas.toDataURL("image/png", 1.0);
+    link.click();
+  }
+
+  els.downloadOneBtn.addEventListener("click", () => {
+    renderPreview();
+    const name = els.studentName.value.trim() || "شهادة";
+    downloadCanvasAsPng(`شهادة-${name}.png`);
+    statusEl.textContent = "تم تنزيل الشهادة ✓";
+  });
+
+  // ---------- batch download as ZIP ----------
+  function parseBatchNames(){
+    return els.batchNames.value
+      .split("\n")
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
+  }
+
+  els.downloadZipBtn.addEventListener("click", async () => {
+    const names = parseBatchNames();
+
+    if (names.length === 0){
+      statusEl.textContent = "أضف أسماء في حقل الدفعة أو ارفع ملف txt أولاً.";
+      return;
+    }
+
+    els.downloadZipBtn.disabled = true;
+    els.downloadOneBtn.disabled = true;
+    els.progressWrap.classList.add("active");
+    statusEl.textContent = `جارٍ إنشاء ${names.length} شهادة...`;
+
+    try {
+      const zip = new JSZip();
+
+      for (let i = 0; i < names.length; i++){
+        const name = names[i];
+        renderName(name);
+        await new Promise(r => setTimeout(r, 0));
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png", 1.0));
+        const safeName = name.replace(/[\\/:*?"<>|]/g, "_");
+        zip.file(`${String(i+1).padStart(2,"0")}-${safeName}.png`, blob);
+
+        const pct = Math.round(((i+1) / names.length) * 100);
+        els.progressBar.style.width = pct + "%";
+        statusEl.textContent = `جارٍ إنشاء الشهادات... (${i+1}/${names.length})`;
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement("a");
+      link.download = "شهادات-الطلاب.zip";
+      link.href = URL.createObjectURL(zipBlob);
+      link.click();
+
+      statusEl.textContent = `تم إنشاء وتنزيل ${names.length} شهادة بنجاح ✓`;
+    } catch (err){
+      console.error(err);
+      statusEl.textContent = "حدث خطأ أثناء إنشاء الدفعة. حاول مرة أخرى.";
+    } finally {
+      renderPreview();
+      els.downloadZipBtn.disabled = false;
+      els.downloadOneBtn.disabled = false;
+      setTimeout(() => {
+        els.progressWrap.classList.remove("active");
+        els.progressBar.style.width = "0%";
+      }, 1200);
+    }
+  });
+
+  // ---------- boot ----------
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(refreshAll);
+  }
+  refreshAll();
+
+})();
+</script>
+
+</body>
+</html>
