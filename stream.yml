@@ -1,0 +1,105 @@
+name: Live Stream 1080p50
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: live-stream
+  cancel-in-progress: false
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg python3-pip
+          pip install --quiet streamlink
+
+      - name: Test Source
+        env:
+          SOURCE_URL: "https://blanchedalmond-dugong-106131.hostingersite.com/live.php/play.ts?file=http://kdmax.myddns.me:8080/live/4653175235828573/4653175235828573/221289.m3u8"
+        run: |
+          echo "Testing: $SOURCE_URL"
+          curl -sI -A "Mozilla/5.0" --max-time 15 "$SOURCE_URL" | head -5
+
+      - name: Start Stream
+        env:
+          SOURCE_URL: "https://blanchedalmond-dugong-106131.hostingersite.com/live.php/play.ts?file=http://kdmax.myddns.me:8080/live/4653175235828573/4653175235828573/221289.m3u8"
+          RTMP_URL: "rtmp://vsu.okcdn.ru/input/12590548983404_11747794029164_rjxxwplwjm"
+        run: |
+          FAIL=0
+          MAX=9999
+
+          while [ $FAIL -lt $MAX ]; do
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "▶ Attempt $((FAIL+1)) | $(date)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            streamlink \
+              --loglevel warning \
+              --retry-streams 5 \
+              --retry-open 5 \
+              --stream-segment-attempts 5 \
+              --stream-segment-timeout 10 \
+              --http-header "User-Agent=Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" \
+              --http-header "Referer=https://blanchedalmond-dugong-106131.hostingersite.com/" \
+              "hlsvariant://$SOURCE_URL" best \
+              -O 2>>streamlink.log | ffmpeg \
+              -nostdin \
+              -hide_banner \
+              -loglevel warning \
+              -stats \
+              -thread_queue_size 1024 \
+              -f mpegts -i pipe:0 \
+              -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=50,format=yuv420p" \
+              -c:v libx264 \
+              -preset superfast \
+              -tune film \
+              -profile:v high \
+              -level 4.2 \
+              -b:v 8000k \
+              -maxrate 8000k \
+              -bufsize 16000k \
+              -g 100 \
+              -keyint_min 50 \
+              -sc_threshold 0 \
+              -r 50 \
+              -c:a aac \
+              -b:a 160k \
+              -ar 48000 \
+              -ac 2 \
+              -max_muxing_queue_size 4096 \
+              -f flv \
+              "$RTMP_URL" 2>>ffmpeg.log
+
+            EXIT=$?
+            echo "⚠ Exit code: $EXIT"
+            echo "── FFmpeg last 15 ──"
+            tail -15 ffmpeg.log 2>/dev/null || echo "(empty)"
+            echo "── Streamlink last 15 ──"
+            tail -15 streamlink.log 2>/dev/null || echo "(empty)"
+
+            FAIL=$((FAIL+1))
+            WAIT=$((FAIL*3))
+            [ $WAIT -gt 30 ] && WAIT=30
+            echo "🔄 Retry in ${WAIT}s (fail $FAIL)"
+            sleep $WAIT
+          done
+
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: |
+            streamlink.log
+            ffmpeg.log
+          retention-days: 3
+          if-no-files-found: ignore
