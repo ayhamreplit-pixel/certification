@@ -7,97 +7,120 @@ concurrency:
   group: live-stream
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   stream:
     runs-on: ubuntu-latest
     timeout-minutes: 350
 
+    env:
+      SOURCE_URL: "http://46.249.110.247/g/g/1484094?token=ShN0YQ0JGlhBVEk9ShAWG04kBi5fWQJEC0E8WgsHJDJHQQQJQQQQQ1JHG0EQQQQQQQ0QQQ0UWwVQAVVQUwxNQ0QQQQQQQQxAWUcQAQQQQQQQRhVGQQQQQUcNUFJQDFFQBQQACEgSQQQQRw1BQQQHQQQQQEYcFAQQQQQQQQQQQQQQQQQQQRICDBYJW09EV1xnBQFUBV5SQw5HBkNJRAQQQRMLXEQIXBRAAQxDEQdMVxpbRghcBwBDGEdUDhAITRMYEwsQdSESFEAGHUMGCEtbVw9GA0ZERUMYR14SOhRcEhVDVFNcAUIaWEFVFU9EVVNAPgdWCl5TAkAMQQQQRANDQBMdEFQQQQQQAQQQEQQQEAJDQQQQQQQQQ0dK"
+      RTMP_URL: "rtmp://vsu.okcdn.ru/input/12590548983404_11747794029164_rjxxwplwjm"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Tools
+      - name: Install tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg python3-pip
-          pip install --quiet streamlink
+          sudo apt-get install -y ffmpeg python3-venv
+          python3 -m venv "$RUNNER_TEMP/streamlink-venv"
+          "$RUNNER_TEMP/streamlink-venv/bin/python" -m pip install --quiet --upgrade pip
+          "$RUNNER_TEMP/streamlink-venv/bin/python" -m pip install --quiet streamlink
+          echo "$RUNNER_TEMP/streamlink-venv/bin" >> "$GITHUB_PATH"
 
-      - name: Test Source
-        env:
-          SOURCE_URL: "https://blanchedalmond-dugong-106131.hostingersite.com/live.php/play.ts?file=http://kdmax.myddns.me:8080/live/4653175235828573/4653175235828573/221289.m3u8"
+      - name: Validate stream info
         run: |
-          echo "Testing: $SOURCE_URL"
-          curl -sI -A "Mozilla/5.0" --max-time 15 "$SOURCE_URL" | head -5
+          set -eu
+          ffmpeg -version | head -1
+          streamlink --version
 
-      - name: Start Stream
-        env:
-          SOURCE_URL: "https://blanchedalmond-dugong-106131.hostingersite.com/live.php/play.ts?file=http://kdmax.myddns.me:8080/live/4653175235828573/4653175235828573/221289.m3u8"
-          RTMP_URL: "rtmp://vsu.okcdn.ru/input/12590548983404_11747794029164_rjxxwplwjm"
+      - name: Test source
         run: |
+          set -eu
+          SOURCE_REFERER="$(python3 -c 'import sys; from urllib.parse import urlsplit; u=urlsplit(sys.argv[1]); print(f"{u.scheme}://{u.netloc}/")' "$SOURCE_URL")"
+          curl --fail --silent --show-error --location \
+            --max-time 20 --range 0-0 \
+            --user-agent "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36" \
+            --referer "$SOURCE_REFERER" \
+            --output /dev/null \
+            --write-out "Source probe: HTTP %{http_code}; %{content_type}\n" \
+            "$SOURCE_URL"
+
+      - name: Start stream and retry on disconnect
+        run: |
+          set -u
+          set -o pipefail
+          SOURCE_REFERER="$(python3 -c 'import sys; from urllib.parse import urlsplit; u=urlsplit(sys.argv[1]); print(f"{u.scheme}://{u.netloc}/")' "$SOURCE_URL")"
           FAIL=0
           MAX=9999
 
-          while [ $FAIL -lt $MAX ]; do
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "▶ Attempt $((FAIL+1)) | $(date)"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          while [ "$FAIL" -lt "$MAX" ]; do
+            echo "Starting stream attempt $((FAIL + 1)) at $(date -u +%FT%TZ)"
 
-            streamlink \
+            if streamlink \
               --loglevel warning \
               --retry-streams 5 \
               --retry-open 5 \
               --stream-segment-attempts 5 \
               --stream-segment-timeout 10 \
-              --http-header "User-Agent=Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" \
-              --http-header "Referer=https://blanchedalmond-dugong-106131.hostingersite.com/" \
-              "hlsvariant://$SOURCE_URL" best \
-              -O 2>>streamlink.log | ffmpeg \
-              -nostdin \
-              -hide_banner \
-              -loglevel warning \
-              -stats \
-              -thread_queue_size 1024 \
-              -f mpegts -i pipe:0 \
-              -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=50,format=yuv420p" \
-              -c:v libx264 \
-              -preset superfast \
-              -tune film \
-              -profile:v high \
-              -level 4.2 \
-              -b:v 8000k \
-              -maxrate 8000k \
-              -bufsize 16000k \
-              -g 100 \
-              -keyint_min 50 \
-              -sc_threshold 0 \
-              -r 50 \
-              -c:a aac \
-              -b:a 160k \
-              -ar 48000 \
-              -ac 2 \
-              -max_muxing_queue_size 4096 \
-              -f flv \
-              "$RTMP_URL" 2>>ffmpeg.log
+              --http-header "User-Agent=Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36" \
+              --http-header "Referer=$SOURCE_REFERER" \
+              --stdout \
+              "$SOURCE_URL" best 2>>streamlink.log |
+              ffmpeg \
+                -nostdin \
+                -hide_banner \
+                -loglevel warning \
+                -stats \
+                -thread_queue_size 1024 \
+                -f mpegts -i pipe:0 \
+                -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=50,format=yuv420p" \
+                -c:v libx264 \
+                -preset superfast \
+                -tune film \
+                -profile:v high \
+                -level 4.2 \
+                -b:v 8000k \
+                -maxrate 8000k \
+                -bufsize 16000k \
+                -g 100 \
+                -keyint_min 50 \
+                -sc_threshold 0 \
+                -r 50 \
+                -c:a aac \
+                -b:a 160k \
+                -ar 48000 \
+                -ac 2 \
+                -max_muxing_queue_size 4096 \
+                -f flv \
+                "$RTMP_URL" 2>>ffmpeg.log; then
+              EXIT=0
+            else
+              EXIT=$?
+            fi
 
-            EXIT=$?
-            echo "⚠ Exit code: $EXIT"
-            echo "── FFmpeg last 15 ──"
-            tail -15 ffmpeg.log 2>/dev/null || echo "(empty)"
-            echo "── Streamlink last 15 ──"
-            tail -15 streamlink.log 2>/dev/null || echo "(empty)"
+            echo "Stream pipeline exited with code $EXIT."
+            echo "Recent FFmpeg output:"
+            tail -15 ffmpeg.log 2>/dev/null || true
+            echo "Recent Streamlink output:"
+            tail -15 streamlink.log 2>/dev/null || true
 
-            FAIL=$((FAIL+1))
-            WAIT=$((FAIL*3))
-            [ $WAIT -gt 30 ] && WAIT=30
-            echo "🔄 Retry in ${WAIT}s (fail $FAIL)"
-            sleep $WAIT
+            FAIL=$((FAIL + 1))
+            WAIT=$((FAIL * 3))
+            [ "$WAIT" -gt 30 ] && WAIT=30
+            echo "Retrying in ${WAIT}s (attempt $FAIL)."
+            sleep "$WAIT"
           done
 
-      - name: Upload Logs
+      - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: logs
+          name: live-stream-logs
           path: |
             streamlink.log
             ffmpeg.log
