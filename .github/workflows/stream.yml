@@ -49,69 +49,58 @@ jobs:
             "$SOURCE_URL" | head -c 1024 > /dev/null
           echo "Source probe check passed."
 
-      - name: Start stream and retry on disconnect
+      - name: Start continuous stream and auto-recovery
         run: |
           set -u
-          set -o pipefail
           SOURCE_REFERER="$(python3 -c 'import sys; from urllib.parse import urlsplit; u=urlsplit(sys.argv[1]); print(f"{u.scheme}://{u.netloc}/")' "$SOURCE_URL")"
           FAIL=0
           MAX=9999
 
           while [ "$FAIL" -lt "$MAX" ]; do
-            echo "Starting stream attempt $((FAIL + 1)) at $(date -u +%FT%TZ)"
+            echo "Starting stable stream attempt $((FAIL + 1)) at $(date -u +%FT%TZ)"
 
-            if streamlink \
-              --loglevel warning \
-              --retry-streams 5 \
-              --retry-open 5 \
-              --stream-segment-attempts 5 \
-              --stream-segment-timeout 10 \
-              --http-header "User-Agent=Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36" \
-              --http-header "Referer=$SOURCE_REFERER" \
-              --stdout \
-              "$SOURCE_URL" best 2>>streamlink.log |
-              ffmpeg \
-                -nostdin \
-                -hide_banner \
-                -loglevel warning \
-                -stats \
-                -thread_queue_size 1024 \
-                -f mpegts -i pipe:0 \
-                -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=50,format=yuv420p" \
-                -c:v libx264 \
-                -preset superfast \
-                -tune film \
-                -profile:v high \
-                -level 4.2 \
-                -b:v 8000k \
-                -maxrate 8000k \
-                -bufsize 16000k \
-                -g 100 \
-                -keyint_min 50 \
-                -sc_threshold 0 \
-                -r 50 \
-                -c:a aac \
-                -b:a 160k \
-                -ar 48000 \
-                -ac 2 \
-                -max_muxing_queue_size 4096 \
-                -f flv \
-                "$RTMP_URL" 2>>ffmpeg.log; then
-              EXIT=0
-            else
-              EXIT=$?
-            fi
+            # محاولة التشغيل المباشر عبر FFmpeg مع خاصية إعادة الاتصال الذاتي لمصدر الـ TS ولـ ok.ru
+            ffmpeg \
+              -nostdin \
+              -hide_banner \
+              -loglevel warning \
+              -stats \
+              -user_agent "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36" \
+              -headers "Referer: $SOURCE_REFERER\r\n" \
+              -reconnect 1 \
+              -reconnect_streamed 1 \
+              -reconnect_delay_max 5 \
+              -thread_queue_size 4096 \
+              -i "$SOURCE_URL" \
+              -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=50,format=yuv420p" \
+              -c:v libx264 \
+              -preset superfast \
+              -tune film \
+              -profile:v high \
+              -level 4.2 \
+              -b:v 8000k \
+              -maxrate 8000k \
+              -bufsize 16000k \
+              -g 100 \
+              -keyint_min 50 \
+              -sc_threshold 0 \
+              -r 50 \
+              -c:a aac \
+              -b:a 160k \
+              -ar 48000 \
+              -ac 2 \
+              -max_muxing_queue_size 4096 \
+              -f flv \
+              "$RTMP_URL" 2>>ffmpeg.log || EXIT=$?
 
+            EXIT=$?
             echo "Stream pipeline exited with code $EXIT."
             echo "Recent FFmpeg output:"
-            tail -15 ffmpeg.log 2>/dev/null || true
-            echo "Recent Streamlink output:"
-            tail -15 streamlink.log 2>/dev/null || true
+            tail -20 ffmpeg.log 2>/dev/null || true
 
             FAIL=$((FAIL + 1))
-            WAIT=$((FAIL * 3))
-            [ "$WAIT" -gt 30 ] && WAIT=30
-            echo "Retrying in ${WAIT}s (attempt $FAIL)."
+            WAIT=5
+            echo "Reconnecting in ${WAIT}s (attempt $FAIL)..."
             sleep "$WAIT"
           done
 
